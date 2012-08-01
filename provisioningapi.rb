@@ -741,12 +741,18 @@ module GAppsProvisioning #:nodoc:
 	#	group_id : string . The group_id is written without "@" and everything following.
 	class GroupEntry
 	attr_reader :group_id
-	
+	attr_reader :email_permission
+	attr_reader :description
+
 		# GroupEntry constructor. Needs a REXML::Element <entry> as parameter
 		def initialize(entry) #:nodoc:
-		entry.elements.each("apps:property"){ |e| @group_id = e.attributes["value"] if e.attributes["name"].eql?("groupId") }
-		end	
-	end
+		  entry.elements.each("apps:property"){ |e| 
+        @group_id = e.attributes["value"] if e.attributes["name"].eql?("groupId") 
+        @email_permission = e.attributes["value"] if e.attributes["name"].eql?("emailPermission")
+        @description = e.attributes["value"] if e.attributes["name"].eql?("description") 
+      }
+		  end	
+	  end
 
 
 	# MemberEntry object.
