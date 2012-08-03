@@ -453,7 +453,18 @@ module GAppsProvisioning #:nodoc:
 			list_feed = Feed.new(xml_response.elements["feed"], GroupEntry) 
 			list_feed = add_next_feeds(list_feed, xml_response, GroupEntry)
 		end
-	
+  
+		def retrieve_group(group_id)
+			feeddoc = Document.new("<feed xmlns='http://www.w3.org/2005/Atom' xmlns:apps='http://schemas.google.com/apps/2006'></feed>")
+			feeddoc << XMLDecl.new
+			xml_response = request(:group_retrieve, group_id, @headers)
+
+			feeddoc.root.add(xml_response.elements["entry"])
+
+			list_feed = Feed.new(feeddoc.elements["feed"], GroupEntry) 
+			list_feed = add_next_feeds(list_feed, feeddoc, GroupEntry)
+		end
+
 		# Adds an email address (user or group) to a mailing list in your domain and returns a MemberEntry instance.
 		# You can add addresses from other domains to your mailing list.  Omit "@mydomain.com" in the group name.
 		#	ex :
@@ -567,6 +578,7 @@ module GAppsProvisioning #:nodoc:
                 alias updateGroup update_group
                 alias deleteGroup delete_group
                 alias retrieveGroups retrieve_groups
+                alias retrieveGroup retrieve_group
                 alias retrieveAllGroups retrieve_all_groups
                 alias addMemberToGroup add_member_to_group
                 alias removeMemberFromGroup remove_member_from_group
@@ -604,6 +616,7 @@ module GAppsProvisioning #:nodoc:
 			action[:group_update] = { :method => 'PUT', :path =>path_group+'/' }
 			action[:group_delete] = { :method => 'DELETE', :path =>path_group+'/' }
 			action[:groups_retrieve] = { :method => 'GET', :path =>path_group+'?member=' }
+			action[:group_retrieve]  = { :method => 'GET', :path =>path_group+'/' }
 			action[:all_groups_retrieve] = { :method => 'GET', :path =>path_group }
 			action[:membership_add] = { :method => 'POST', :path =>path_group+'/' }
 			action[:membership_remove] = { :method => 'DELETE', :path =>path_group+'/' }
@@ -743,7 +756,7 @@ module GAppsProvisioning #:nodoc:
 	attr_reader :group_id
 	attr_reader :email_permission
 	attr_reader :description
-
+	attr_reader :updated
 		# GroupEntry constructor. Needs a REXML::Element <entry> as parameter
 		def initialize(entry) #:nodoc:
 		  entry.elements.each("apps:property"){ |e| 
@@ -751,6 +764,8 @@ module GAppsProvisioning #:nodoc:
         @email_permission = e.attributes["value"] if e.attributes["name"].eql?("emailPermission")
         @description = e.attributes["value"] if e.attributes["name"].eql?("description") 
       }
+
+		  @updated = entry.elements["updated"][0] if entry.elements["updated"]
 		  end	
 	  end
 
